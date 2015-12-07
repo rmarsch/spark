@@ -198,6 +198,11 @@ def run_scala_style_checks():
     run_cmd([os.path.join(SPARK_HOME, "dev", "lint-scala")])
 
 
+def run_java_style_checks():
+    set_title_and_block("Running Java style checks", "BLOCK_JAVA_STYLE")
+    run_cmd([os.path.join(SPARK_HOME, "dev", "lint-java")])
+
+
 def run_python_style_checks():
     set_title_and_block("Running Python style checks", "BLOCK_PYTHON_STYLE")
     run_cmd([os.path.join(SPARK_HOME, "dev", "lint-python")])
@@ -486,7 +491,7 @@ def main():
     else:
         # else we're running locally and can use local settings
         build_tool = "sbt"
-        hadoop_version = "hadoop2.3"
+        hadoop_version = os.environ.get("HADOOP_PROFILE", "hadoop2.3")
         test_env = "local"
 
     print("[info] Using build tool", build_tool, "with Hadoop profile", hadoop_version,
@@ -522,6 +527,8 @@ def main():
     # style checks
     if not changed_files or any(f.endswith(".scala") for f in changed_files):
         run_scala_style_checks()
+    if not changed_files or any(f.endswith(".java") for f in changed_files):
+        run_java_style_checks()
     if not changed_files or any(f.endswith(".py") for f in changed_files):
         run_python_style_checks()
     if not changed_files or any(f.endswith(".R") for f in changed_files):
