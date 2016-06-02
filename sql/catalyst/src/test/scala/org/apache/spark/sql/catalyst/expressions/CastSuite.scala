@@ -17,8 +17,8 @@
 
 package org.apache.spark.sql.catalyst.expressions
 
-import java.sql.{Timestamp, Date}
-import java.util.{TimeZone, Calendar}
+import java.sql.{Date, Timestamp}
+import java.util.{Calendar, TimeZone}
 
 import org.apache.spark.SparkFunSuite
 import org.apache.spark.sql.Row
@@ -297,7 +297,7 @@ class CastSuite extends SparkFunSuite with ExpressionEvalHelper {
   test("cast from string") {
     assert(cast("abcdef", StringType).nullable === false)
     assert(cast("abcdef", BinaryType).nullable === false)
-    assert(cast("abcdef", BooleanType).nullable === false)
+    assert(cast("abcdef", BooleanType).nullable === true)
     assert(cast("abcdef", TimestampType).nullable === true)
     assert(cast("abcdef", LongType).nullable === true)
     assert(cast("abcdef", IntegerType).nullable === true)
@@ -547,8 +547,7 @@ class CastSuite extends SparkFunSuite with ExpressionEvalHelper {
     }
     {
       val ret = cast(array_notNull, ArrayType(BooleanType, containsNull = false))
-      assert(ret.resolved === true)
-      checkEvaluation(ret, Seq(null, true, false))
+      assert(ret.resolved === false)
     }
 
     {
@@ -606,8 +605,7 @@ class CastSuite extends SparkFunSuite with ExpressionEvalHelper {
     }
     {
       val ret = cast(map_notNull, MapType(StringType, BooleanType, valueContainsNull = false))
-      assert(ret.resolved === true)
-      checkEvaluation(ret, Map("a" -> null, "b" -> true, "c" -> false))
+      assert(ret.resolved === false)
     }
     {
       val ret = cast(map_notNull, MapType(IntegerType, StringType, valueContainsNull = true))
@@ -713,8 +711,7 @@ class CastSuite extends SparkFunSuite with ExpressionEvalHelper {
         StructField("a", BooleanType, nullable = true),
         StructField("b", BooleanType, nullable = true),
         StructField("c", BooleanType, nullable = false))))
-      assert(ret.resolved === true)
-      checkEvaluation(ret, InternalRow(null, true, false))
+      assert(ret.resolved === false)
     }
 
     {
@@ -754,11 +751,7 @@ class CastSuite extends SparkFunSuite with ExpressionEvalHelper {
         StructType(Seq(
           StructField("l", LongType, nullable = true)))))))
 
-    assert(ret.resolved === true)
-    checkEvaluation(ret, Row(
-      Seq(123, null, null),
-      Map("a" -> null, "b" -> true, "c" -> false),
-      Row(0L)))
+    assert(ret.resolved === false)
   }
 
   test("cast between string and interval") {

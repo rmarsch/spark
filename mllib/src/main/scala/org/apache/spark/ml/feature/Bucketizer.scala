@@ -20,7 +20,7 @@ package org.apache.spark.ml.feature
 import java.{util => ju}
 
 import org.apache.spark.SparkException
-import org.apache.spark.annotation.{Since, Experimental}
+import org.apache.spark.annotation.{Experimental, Since}
 import org.apache.spark.ml.Model
 import org.apache.spark.ml.attribute.NominalAttribute
 import org.apache.spark.ml.param._
@@ -43,7 +43,7 @@ final class Bucketizer(override val uid: String)
   /**
    * Parameter for mapping continuous features into buckets. With n+1 splits, there are n buckets.
    * A bucket defined by splits x,y holds values in the range [x,y) except the last bucket, which
-   * also includes y. Splits should be strictly increasing.
+   * also includes y. Splits should be of length >= 3 and strictly increasing.
    * Values at -inf, inf must be explicitly provided to cover all Double values;
    * otherwise, values outside the splits specified will be treated as errors.
    * @group param
@@ -51,8 +51,8 @@ final class Bucketizer(override val uid: String)
   val splits: DoubleArrayParam = new DoubleArrayParam(this, "splits",
     "Split points for mapping continuous features into buckets. With n+1 splits, there are n " +
       "buckets. A bucket defined by splits x,y holds values in the range [x,y) except the last " +
-      "bucket, which also includes y. The splits should be strictly increasing. " +
-      "Values at -inf, inf must be explicitly provided to cover all Double values; " +
+      "bucket, which also includes y. The splits should be of length >= 3 and strictly " +
+      "increasing. Values at -inf, inf must be explicitly provided to cover all Double values; " +
       "otherwise, values outside the splits specified will be treated as errors.",
     Bucketizer.checkSplits)
 
@@ -68,7 +68,8 @@ final class Bucketizer(override val uid: String)
   /** @group setParam */
   def setOutputCol(value: String): this.type = set(outputCol, value)
 
-  override def transform(dataset: DataFrame): DataFrame = {
+  @Since("2.0.0")
+  override def transform(dataset: Dataset[_]): DataFrame = {
     transformSchema(dataset.schema)
     val bucketizer = udf { feature: Double =>
       Bucketizer.binarySearchForBuckets($(splits), feature)
